@@ -79,17 +79,17 @@ jobs:
         echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
         echo "::set-output name=repo_name::$REPO_NAME"
         
-    - name: Convert repository name to lowercase
-      run: |
-        REPO_NAME_LOWER=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')
-        echo "REPO_NAME_LOWER=$REPO_NAME_LOWER" >> $GITHUB_ENV
-        echo "::set-output name=repo_name_lower::$REPO_NAME_LOWER"
+    #- name: Convert repository name to lowercase
+    # run: |
+    #    REPO_NAME_LOWER=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')
+    #   echo "REPO_NAME_LOWER=$REPO_NAME_LOWER" >> $GITHUB_ENV
+    #    echo "::set-output name=repo_name_lower::$REPO_NAME_LOWER"
 
 
     - name: Build Docker image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ env.REPO_NAME_LOWER }}
+        ECR_REPOSITORY: ${{ env.REPO_NAME}}
         IMAGE_TAG: ${{ steps.next_version.outputs.tag }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
