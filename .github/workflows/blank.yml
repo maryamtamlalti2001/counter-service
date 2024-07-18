@@ -103,7 +103,7 @@ jobs:
     - name: Push Docker image to Amazon ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ env.REPO_NAME_LOWER }}
+        ECR_REPOSITORY: counter
         IMAGE_TAG: ${{ steps.next_version.outputs.tag }}
       run: |
         # Tag the image as latest
