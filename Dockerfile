@@ -4,9 +4,9 @@
 # If you need more help, visit the Dockerfile reference guide at
 # https://docs.docker.com/engine/reference/builder/
 
-ARG PYTHON_VERSION=3.11.5
+ARG PYTHON_VERSION=3.13.0a6
 #change the version to alpine to avoid problems 
-FROM python:${PYTHON_VERSION}-alpine AS base
+FROM python:${PYTHON_VERSION}-alpine3.18 AS base
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
