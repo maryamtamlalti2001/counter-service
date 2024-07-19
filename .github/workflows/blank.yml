@@ -130,7 +130,7 @@ jobs:
         #SNYK_TOKEN: 63cb2b04-17a2-477d-97a1-3d654fdc7104
       with:
         image: ${{ env.IMAGE_NAME }}
-        #args: --severity-threshold=high --policy-path=.snyk
+        args: --severity-threshold=high --policy-path=.snyk
       continue-on-error: false
 
 ###########################################################
