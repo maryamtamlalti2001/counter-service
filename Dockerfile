@@ -6,7 +6,7 @@
 
 ARG PYTHON_VERSION=3.11.5
 #change the version to alpine to avoid problems 
-FROM python:${PYTHON_VERSION}-alpine as base
+FROM python:${PYTHON_VERSION}-alpine AS base
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
