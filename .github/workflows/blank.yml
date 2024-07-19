@@ -121,7 +121,8 @@ jobs:
           echo "Secret is set correctly"
         fi
     - name: Test Snyk Authentication
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      run: |
+        snyk auth ${{ secrets.SNYK_TOKEN }}
 
         
         
