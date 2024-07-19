@@ -3,7 +3,10 @@ from flask_wtf.csrf import CSRFProtect
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')  # Fallback key for development
+# Ensure SECRET_KEY is set in the environment, otherwise raise an error
+if 'SECRET_KEY' not in os.environ:
+    raise ValueError("No SECRET_KEY set for Flask application")
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 csrf = CSRFProtect(app)
 
 # Define the file's path to store the data
