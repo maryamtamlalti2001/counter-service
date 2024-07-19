@@ -1,13 +1,151 @@
-name: Example workflow for Docker using Snyk 
-on: push
+name: Build and Push Docker image to AWS ECR
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
-  security:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
+    - name: Check out the repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Necessary to fetch all tags and history
+################################################################
+###               SONAR CLOUD SCAN                           ###
+### Drops the build if any bugs or vulnerabilities are found.###
+###            Using the default quality gate.               ###
+###        Connected to my personal Sonar Cloud account      ###
+################################################################
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN_2 }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        
+
+    
+
+################################################################
+###               DETERMINE NEXT VERSION                     ###
+###   Used for creating new releases and image tags          ###
+################################################################
+
+    - name: Determine Next Version
+      id: next_version
+      run: |
+        # Fetch all tags
+        git fetch --tags
+        
+        # Get the latest tag, assume semver, and sort.
+        LATEST_TAG=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+        
+        # If there's no tag yet, start with v0.0.0. Used for new repos
+        if [ -z "$LATEST_TAG" ]; then
+          LATEST_TAG="v0.0.0"
+        fi
+        
+        # Increment the patch version
+        NEXT_TAG=$(echo $LATEST_TAG | awk -F. '{print $1"."$2"."$3+1}')
+        
+        # Output the next version
+        echo "::set-output name=tag::$NEXT_TAG"
+        echo "Next version: $NEXT_TAG"
+################################################################
+###                     CREATE RELEASE                       ###
+###  Creating release with the tag from the previous step    ###
+################################################################
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN_2 }}
+      with:
+        tag_name: ${{ steps.next_version.outputs.tag }}
+        release_name: Release ${{ steps.next_version.outputs.tag }}
+        draft: false
+        prerelease: false
+
+################################################################
+###                  BUILD DOCKER IMAGE                      ###
+###         Build Docker image from the Dockefile            ###
+################################################################
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-north-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Extract repository name
+      id: repo-name
+      run: |
+        REPO_NAME="${GITHUB_REPOSITORY##*/}"
+        echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+        echo "::set-output name=repo_name::$REPO_NAME"
+        
+    #- name: Convert repository name to lowercase
+    # run: |
+    #    REPO_NAME_LOWER=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')
+    #   echo "REPO_NAME_LOWER=$REPO_NAME_LOWER" >> $GITHUB_ENV
+    #    echo "::set-output name=repo_name_lower::$REPO_NAME_LOWER"
+
+
+    - name: Build Docker image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ env.REPO_NAME}}
+        IMAGE_TAG: ${{ steps.next_version.outputs.tag }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        echo "IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+        
+    - name: Verify secret is passed correctly
+      run: |
+        if [ -z "${{ secrets.SNYK_TOKEN }}" ]; then
+          echo "Secret is not set"
+        else
+          echo "Secret is set correctly"
+        fi
+
+    - name: Test Snyk Authentication
+      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+        
+        
     - name: Run Snyk to check Docker image for vulnerabilities
       uses: snyk/actions/docker@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        #SNYK_TOKEN: 63cb2b04-17a2-477d-97a1-3d654fdc7104
       with:
-        image: maryam2001/commande_service:1.0.2
+        image: ${{ env.IMAGE_NAME }}
+        #args: --severity-threshold=high --policy-path=.snyk
+      continue-on-error: false
 
+###########################################################
+###                  PUSH IMAGE TO ECR                  ###
+###     Tag Docker image as "latest" and push to ECR    ###
+########################################################### 
+
+    - name: Push Docker image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ env.REPO_NAME}}
+        IMAGE_TAG: ${{ steps.next_version.outputs.tag }}
+      run: |
+        # Tag the image as latest
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        # Push the specific version tag
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        # Push the latest tag
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
