@@ -1,7 +1,13 @@
 from flask import Flask, request, jsonify
+from flask_wtf.csrf import CSRFProtect
 import os
 
+
 app=Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+csrf = CSRFProtect(app)
+
+
 
 #define the file's path to store the data 
 
