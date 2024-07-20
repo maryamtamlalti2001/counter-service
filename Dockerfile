@@ -41,6 +41,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 USER appuser
 
 # Copy the source code into the container.
+COPY config.py .
 COPY counter.py .
 
 # Expose the port that the application listens on.
