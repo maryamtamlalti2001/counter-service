@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - name: Check out the repo
       uses: actions/checkout@v2
@@ -26,6 +26,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN_2 }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         
+    - name: Setup Git
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
 
     
 
@@ -54,7 +58,6 @@ jobs:
         # Output the next version
         echo "::set-output name=tag::$NEXT_TAG"
         echo "Next version: $NEXT_TAG"
-
 ################################################################
 ###                     CREATE RELEASE                       ###
 ###  Creating release with the tag from the previous step    ###
@@ -81,7 +84,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-north-1
+        aws-region: us-east-1
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -109,6 +112,26 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         echo "IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+        
+    - name: Verify secret is passed correctly
+      run: |
+        if [ -z "${{ secrets.SNYK_TOKEN }}" ]; then
+          echo "Secret is not set"
+        else
+          echo "Secret is set correctly"
+        fi
+
+        
+        
+    - name: Run Snyk to check Docker image for vulnerabilities
+      uses: snyk/actions/docker@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        #SNYK_TOKEN: 63cb2b04-17a2-477d-97a1-3d654fdc7104
+      with:
+        image: ${{ env.IMAGE_NAME }}
+        args: --severity-threshold=high --policy-path=.snyk
+      continue-on-error: false
 
 ###########################################################
 ###                  PUSH IMAGE TO ECR                  ###
