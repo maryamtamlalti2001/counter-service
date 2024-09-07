@@ -3,6 +3,7 @@ services:
   counter-service:
     container_name: my-counter-service
     image: 246988968739.dkr.ecr.us-east-1.amazonaws.com/counter-service:latest
+    user: "0"
     volumes:
       -  ./data:/app/data
     ports:
