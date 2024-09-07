@@ -47,6 +47,8 @@ USER appuser
 # Copy the source code into the container.
 COPY config.py .
 COPY counter.py .
+# Set permissions
+RUN chmod -R 755 /app/data
 
 # Expose the port that the application listens on.
 EXPOSE 8080
