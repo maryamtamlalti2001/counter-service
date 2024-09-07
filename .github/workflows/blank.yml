@@ -150,6 +150,7 @@ jobs:
         $SSH_COMMAND "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY"
         
         # Copy docker-compose.yml to EC2 server
+        echo "host : $EC2_HOST"
         $SCP_COMMAND docker-compose.yml $EC2_USER@$EC2_HOST:/home/ubuntu/docker/
         $SCP_COMMAND -r data $EC2_USER@$EC2_HOST:/home/ubuntu/docker/
 
