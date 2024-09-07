@@ -48,7 +48,7 @@ USER appuser
 COPY config.py .
 COPY counter.py .
 # Set permissions
-RUN chmod -R 755 /app/data
+RUN chmod -R 755 /app
 
 # Expose the port that the application listens on.
 EXPOSE 8080
