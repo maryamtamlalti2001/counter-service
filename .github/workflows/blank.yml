@@ -16,11 +16,13 @@ jobs:
 
     - name: Verify repository clone
       run: |
+        # Print the path where the repository is cloned
+        echo "Repository is cloned in directory: $GITHUB_WORKSPACE"
         # List files to ensure the repository has been cloned correctly
         echo "Listing files in the repository:"
-        ls -la
+        ls -la $GITHUB_WORKSPACE
         # Check if a specific file exists (e.g., Dockerfile)
-        if [ ! -f "Dockerfile" ]; then
+        if [ ! -f "$GITHUB_WORKSPACE/Dockerfile" ]; then
           echo "Dockerfile not found!"
           exit 1
         else
