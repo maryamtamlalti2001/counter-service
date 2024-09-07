@@ -150,6 +150,10 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         # Push the latest tag
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+    - name: Set environment variable
+      run: echo "WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV
+      
     - name: Deploy to EC2
       env:
         EC2_PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
