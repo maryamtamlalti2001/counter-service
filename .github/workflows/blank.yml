@@ -151,7 +151,7 @@ jobs:
         
         # Copy docker-compose.yml to EC2 server
         $SCP_COMMAND docker-compose.yml $EC2_USER@$EC2_HOST:/home/ubuntu/docker/
-        $SCP_COMMAND ./data $EC2_USER@$EC2_HOST:/home/ubuntu/docker/
+        $SCP_COMMAND data $EC2_USER@$EC2_HOST:/home/ubuntu/docker/
 
         $SSH_COMMAND "echo 'Listing files in the /home/ubuntu/docker/ directory:' && ls -la /home/ubuntu/docker/"
         
