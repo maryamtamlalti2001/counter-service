@@ -1,9 +1,9 @@
-name: Build and Push Docker image to AWS ECR
+name: Build, Test, and Push Docker image to AWS ECR
 
 on:
   push:
     branches:
-      - main
+      - development
 
 jobs:
   build-and-push:
@@ -12,29 +12,39 @@ jobs:
     - name: Check out the repo
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0 # Necessary to fetch all tags and history
+        fetch-depth: 0  # Necessary to fetch all tags and history
 
-    - name: Verify repository clone
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'  # Set your Python version
+    - name: Install dependencies
       run: |
-        # Print the path where the repository is cloned
-        echo "Repository is cloned in directory: $GITHUB_WORKSPACE"
-        # List files to ensure the repository has been cloned correctly
-        echo "Listing files in the repository:"
-        ls -la $GITHUB_WORKSPACE
-        # Check if a specific file exists (e.g., Dockerfile)
-        if [ ! -f "$GITHUB_WORKSPACE/Dockerfile" ]; then
-          echo "Dockerfile not found!"
-          exit 1
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov flask_testing flask_wtf
+
+    - name: Run tests with coverage
+      run: |
+        pytest --cov=counter --cov-report=xml
+        if [ -f coverage.xml ]; then
+        echo "Coverage report generated successfully."
+        cat coverage.xml
         else
-          echo "Dockerfile found."
+        echo "Coverage report not found!"
+        exit 1
         fi
+
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN_2 }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
+      with:
+        args: >
+          -Dsonar.python.coverage.reportPaths=coverage.xml  
+          -Dsonar.python.xunit.reportPath=pytest-report.xml 
+
     - name: Setup Git
       run: |
         git config --global user.name 'github-actions'
@@ -98,14 +108,6 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         echo "IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
-        
-    - name: Verify secret is passed correctly
-      run: |
-        if [ -z "${{ secrets.SNYK_TOKEN }}" ]; then
-          echo "Secret is not set"
-        else
-          echo "Secret is set correctly"
-        fi
 
     - name: Run Snyk to check Docker image for vulnerabilities
       uses: snyk/actions/docker@master
@@ -146,10 +148,11 @@ jobs:
         SSH_COMMAND="ssh -i ec2.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST"
         SCP_COMMAND="scp -i ec2.pem -o StrictHostKeyChecking=no"
 
-        #Login to Docker registry
+        # Login to Docker registry
         $SSH_COMMAND "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY"
         
         # Copy docker-compose.yml to EC2 server
+        echo "host : $EC2_HOST"
         $SCP_COMMAND docker-compose.yml $EC2_USER@$EC2_HOST:/home/ubuntu/docker/
         $SCP_COMMAND -r data $EC2_USER@$EC2_HOST:/home/ubuntu/docker/
 
