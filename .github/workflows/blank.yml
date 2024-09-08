@@ -35,8 +35,8 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.python.coverage.reportPaths=coverage.xml  # Point to the generated coverage report
-          -Dsonar.python.xunit.reportPath=pytest-report.xml  # Optional: Point to the pytest results
+          -Dsonar.python.coverage.reportPaths=coverage.xml  
+          -Dsonar.python.xunit.reportPath=pytest-report.xml 
 
     - name: Setup Git
       run: |
