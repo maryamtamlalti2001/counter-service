@@ -3,7 +3,7 @@
 ![image](https://github.com/user-attachments/assets/b19e20b6-6522-4928-93e0-dd8236098523)
 ## Project Goals
 
-The objective of this project is to develop a web service called `counter-service` that:
+The objective of this project is to develop a web service called `counter-service` and create a CI/CD for this Python service using GitHub Actions and AWS. Here is the main goals:
 
 - Maintains a counter for the number of POST requests it has served.
 - Returns the counter value for every GET request.
