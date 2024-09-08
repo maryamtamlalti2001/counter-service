@@ -10,6 +10,7 @@ The objective of this project is to develop a web service called `counter-servic
 - Is built into a Docker image and deployed as a Docker container to an EC2 instance.
 - Passes CI/CD checks and ends up as a running Docker container on the EC2 instance with minimal downtime during re-deployment.
 - Includes security and quality tests using snyk and sonarcloud as part of the CI/CD pipeline to ensure code robustness and security.
+- Includes CSRF token generation to help prevent cross-site request forgery attacks.
 
 ## Features
 
@@ -27,7 +28,7 @@ The objective of this project is to develop a web service called `counter-servic
 - AWS EC2 instance
 - Snyk
 - Sonarcloud
-- 
+
 1. **Clone the Repository**
 
    ```bash
