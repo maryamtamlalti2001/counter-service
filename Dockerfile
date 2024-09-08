@@ -55,3 +55,6 @@ EXPOSE 8080
 # Run the application.
 CMD ["gunicorn", "counter:app", "--bind", "0.0.0.0:8080", "--access-logfile", "-", "--error-logfile", "-"]
 #CMD gunicorn 'myenv.Lib.site-packages.werkzeug.wsgi' --bind=0.0.0.0:8000
+
+
+
