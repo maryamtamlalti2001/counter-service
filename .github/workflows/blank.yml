@@ -23,14 +23,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest pytest-cov flask_testing flask_wtf
 
-
-    - name: Run Tests with Coverage
+    - name: Run tests with coverage
       run: |
-        pytest --cov=counter-service --cov-report=xml  # Replace with your project directory
-
-    - name: Show Coverage XML
-      run: |
+        pytest --cov=counter-service --cov-report=xml
+        if [ -f coverage.xml ]; then
+        echo "Coverage report generated successfully."
         cat coverage.xml
+        else
+        echo "Coverage report not found!"
+        exit 1
+        fi
 
 
     - name: SonarCloud Scan
