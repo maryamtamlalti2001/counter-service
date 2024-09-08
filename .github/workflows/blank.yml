@@ -22,7 +22,7 @@ jobs:
 
     - name: Run Tests with Coverage
       run: |
-        pytest --cov=your_project_directory --cov-report=xml  # Replace with your project directory
+        pytest --cov=counter-service --cov-report=xml  # Replace with your project directory
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
